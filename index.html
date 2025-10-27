@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Перейти на сайт записи</title>
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#60a5fa;--text:#fff}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{display:flex;align-items:center;justify-content:center;background:var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);padding:20px}
+    .card{width:100%;max-width:520px;background:linear-gradient(180deg,var(--card),#0f172a);border-radius:14px;padding:28px;box-shadow:0 8px 30px rgba(2,6,23,.6);text-align:center}
+    h1{margin:0 0 10px;font-size:20px}
+    p{subtle;margin:0 0 20px;color:rgba(255,255,255,.78)}
+    .btn{
+      display:inline-block;padding:14px 20px;border-radius:12px;border:0;font-weight:700;font-size:16px;
+      background:linear-gradient(90deg,var(--accent),#3b82f6);color:#04203a;cursor:pointer;
+      width:100%;max-width:420px;
+      transition:transform .08s ease,box-shadow .12s ease;
+      box-shadow:0 8px 18px rgba(59,130,246,.18);
+    }
+    .btn:active{transform:translateY(1px) scale(.998)}
+    .small{margin-top:12px;font-size:13px;color:rgba(255,255,255,.65)}
+    footer{margin-top:16px;font-size:12px;color:rgba(255,255,255,.45)}
+  </style>
+</head>
+<body>
+  <div class="card" role="main" aria-labelledby="title">
+    <h1 id="title">Запись на приём / событие</h1>
+    <p class="small">Нажми кнопку ниже, чтобы открыть страницу со списком записи.</p>
+
+    <button id="openBtn" class="btn" aria-label="Перейти на сайт записи">Перейти к записи</button>
+
+    <div class="small" style="margin-top:12px">Откроется в новой вкладке (если ты в браузере) или в приложении VK.</div>
+    <footer>Если что-то не сработает — попробуй открыть ссылку вручную.</footer>
+  </div>
+
+  <script>
+    // ← Замените на вашу целевую ссылку
+    const TARGET_URL = "https://skinbylera-kosmetolog-estetist.booknow.ru/";
+
+    function openByVK(url) {
+      try {
+        if (window.vkBridge && typeof vkBridge.send === "function") {
+          // Инициализация не обязательна, но иногда полезна
+          vkBridge.send("VKWebAppInit").catch(()=>{});
+          return vkBridge.send("VKWebAppOpenLink", { url });
+        }
+      } catch (e) {
+        // игнорируем ошибки и отдадим управление дальше
+      }
+      return Promise.reject();
+    }
+
+    function openInBrowser(url) {
+      // Открываем в новой вкладке (по клику не блокируется)
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      if (!win) {
+        // если popup заблокирован (маловероятно при user-gesture), делаем замену текущей страницы
+        window.location.href = url;
+      } else {
+        // фокус на новую вкладку — не всегда нужен, но безопасно
+        try { win.focus(); } catch(e) {}
+      }
+    }
+
+    document.getElementById("openBtn").addEventListener("click", async function (e) {
+      const url = TARGET_URL;
+      // Попробуем через VK Bridge сначала (если внутри VK)
+      const vkResult = await openByVK(url).catch(()=>null);
+      if (!vkResult) {
+        // не в VK или ошибка — открываем в браузере
+        openInBrowser(url);
+      }
+    });
+
+    // Для юзабилити: при нажатии Enter по кнопке — тоже работает
+    document.getElementById("openBtn").addEventListener("keyup", function(e){
+      if (e.key === "Enter" || e.key === " ") this.click();
+    });
+  </script>
+</body>
+</html>
